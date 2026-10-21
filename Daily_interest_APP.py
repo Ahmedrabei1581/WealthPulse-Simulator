@@ -11,7 +11,7 @@ import openpyxl
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 
 # --- Page Configuration ---
-st.set_page_config(page_title="Smart Banking Return Simulator", page_icon="🏛️", layout="centered")
+st.set_page_config(page_title="WMBAP - Smart Banking Return Simulator", page_icon="🏛️", layout="centered")
 
 # --- Language Selector (Sidebar) ---
 st.sidebar.title("🌐 Language / اللغة")
@@ -20,11 +20,14 @@ lang = st.sidebar.radio("Select Language / اختر اللغة:", ["English", "�
 # --- Translation Dictionary ---
 T = {
     "English": {
-        "page_title": "🏛️ Wealth Management & Banking Analytics Platform",
+        "title_acronym": "🏛️ WMBAP",
+        "title_full": "Wealth Management & Banking Analytics Platform",
         "page_desc": "Comprehensive system for simulating daily compounding returns, structured deposits, and investment certificates with executive reports.",
         "client_section": "💼 Client Profile & Credit Information",
         "client_name": "👤 Client / Institutional Entity Name:",
         "account_num": "🔢 Account / Contract Reference:",
+        "client_placeholder": "Enter client or institution name...",
+        "account_placeholder": "Enter account or contract reference...",
         "engine_select": "🎯 Select Calculation Engine / Banking Product:",
         "products": [
             "📊 Daily Compounding Return (%) - Core Engine",
@@ -57,11 +60,14 @@ T = {
         "years_list": ["Year 1", "Year 2", "Year 3"],
     },
     "العربية": {
-        "page_title": "🏛️ منصة إدارة الثروات والتحليل المالي المصرفي",
+        "title_acronym": "🏛️ WMBAP",
+        "title_full": "منصة إدارة الثروات والتحليل المالي المصرفي",
         "page_desc": "النظام المتكامل لمحاكاة العوائد التراكمية، الودائع الهيكلية، والشهادات الاستثمارية مع تقارير مؤسسية معتمدة.",
         "client_section": "💼 ملف العميل والبيانات الائتمانية",
-        "client_name": "👤 اسم العميل الكريم / الجهة الاستثمارية:",
+        "client_name": "👤 اسم العميل / الجهة الاستثمارية:",
         "account_num": "🔢 رقم الحساب المصرفي / مرجع العقد:",
+        "client_placeholder": "أدخل اسم العميل أو الشركة...",
+        "account_placeholder": "أدخل رقم الحساب أو المرجع...",
         "engine_select": "🎯 اختر محرك الحساب / المنتج المصرفي المطلوب:",
         "products": [
             "📊 العائد التراكمي اليومي (Daily Compounding %) - المحرك الأساسي",
@@ -100,8 +106,9 @@ txt = T[lang]
 # --- UI Header ---
 st.markdown(f"""
     <div style="background: linear-gradient(135deg, #1f4e78 0%, #002060 100%); padding: 25px; border-radius: 12px; color: white; text-align: center; margin-bottom: 25px;">
-        <h1 style="margin: 0; font-size: 26px; font-weight: 700;">{txt['page_title']}</h1>
-        <p style="margin: 8px 0 0 0; font-size: 14px; opacity: 0.9;">{txt['page_desc']}</p>
+        <h1 style="margin: 0; font-size: 32px; font-weight: 800; letter-spacing: 1px;">{txt['title_acronym']}</h1>
+        <h3 style="margin: 6px 0 0 0; font-size: 18px; font-weight: 500; opacity: 0.95;">{txt['title_full']}</h3>
+        <p style="margin: 10px 0 0 0; font-size: 13px; opacity: 0.8; font-style: italic;">{txt['page_desc']}</p>
     </div>
 """, unsafe_allow_html=True)
 
@@ -111,10 +118,14 @@ with st.container():
     st.markdown('<div style="background-color: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid #e5e7eb; margin-bottom: 20px;">', unsafe_allow_html=True)
     col1, col2 = st.columns(2)
     with col1:
-        client_name = st.text_input(txt["client_name"], value="Ahmed Rabei")
+        client_name = st.text_input(txt["client_name"], value="", placeholder=txt["client_placeholder"])
     with col2:
-        account_number = st.text_input(txt["account_num"], value="ACC-11253872")
+        account_number = st.text_input(txt["account_num"], value="", placeholder=txt["account_placeholder"])
     st.markdown('</div>', unsafe_allow_html=True)
+
+# Set defaults if client fields are left empty
+display_client = client_name.strip() if client_name.strip() else "N/A"
+display_account = account_number.strip() if account_number.strip() else "N/A"
 
 # Product Selection
 calculation_type = st.selectbox(txt["engine_select"], txt["products"])
@@ -201,7 +212,7 @@ class NumberedCanvas(canvas.Canvas):
         self.setFillColor(colors.gray)
         page_text = f"Page {self._pageNumber} of {page_count}"
         self.drawRightString(letter[0] - 54, 36, page_text)
-        self.drawString(54, 36, "Official Wealth Management & Banking Report")
+        self.drawString(54, 36, "Official Wealth Management & Banking Report (WMBAP)")
         self.restoreState()
 
 def generate_pdf_report(client, account, prod_type_en, summary_data, fig_buffer):
@@ -281,7 +292,6 @@ if calculation_type in [txt["products"][0]]:
     st.success(f"**{txt['final_balance']} {days} {txt['days_label']}:** {final_amount:,.2f}")
     st.info(f"**{txt['total_profit']}** {total_profit:,.2f}")
     
-    # --- Fix for Bidi Rendering Issue in Arabic Numbers/Percentages ---
     if lang == "العربية":
         st.markdown(f"""
             <div dir="rtl" style="text-align: right; background-color: #d1ecf1; color: #0c5460; padding: 10px 15px; border-radius: 5px; border: 1px solid #bee5eb; font-weight: bold;">
@@ -310,8 +320,8 @@ if calculation_type in [txt["products"][0]]:
     st.line_chart(pd.DataFrame({"Total Balance": balances, "Net Profit": profits}, index=days_list))
     
     summary_dict = {
-        "Client Name": client_name,
-        "Account / Contract": account_number,
+        "Client Name": display_client,
+        "Account / Contract": display_account,
         "Initial Principal": f"{principal:,.2f}",
         "Nominal Annual Rate": f"{annual_rate_percent}%",
         "Effective Annual Rate (EAR)": f"{effective_rate:.2f}%",
@@ -322,11 +332,11 @@ if calculation_type in [txt["products"][0]]:
     
     col_dl1, col_dl2 = st.columns(2)
     with col_dl1:
-        excel_data = generate_excel_report(client_name, account_number, "Daily Compounding %", summary_dict, df_raw)
-        st.download_button(txt["btn_excel"], data=excel_data, file_name=f'compounding_return_{account_number}.xlsx', mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        excel_data = generate_excel_report(display_client, display_account, "Daily Compounding %", summary_dict, df_raw)
+        st.download_button(txt["btn_excel"], data=excel_data, file_name=f'compounding_return_{display_account}.xlsx', mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
     with col_dl2:
-        pdf_data = generate_pdf_report(client_name, account_number, "Daily Compounding %", summary_dict, fig_buf)
-        st.download_button(txt["btn_pdf"], data=pdf_data, file_name=f'investment_report_{account_number}.pdf', mime='application/pdf')
+        pdf_data = generate_pdf_report(display_client, display_account, "Daily Compounding %", summary_dict, fig_buf)
+        st.download_button(txt["btn_pdf"], data=pdf_data, file_name=f'investment_report_{display_account}.pdf', mime='application/pdf')
 
 # --- Logic 2: Fixed Daily Amount ---
 elif calculation_type in [txt["products"][1]]:
@@ -373,8 +383,8 @@ elif calculation_type in [txt["products"][1]]:
     st.line_chart(pd.DataFrame({"Total Balance": total_balances}, index=days_list))
     
     summary_dict = {
-        "Client Name": client_name,
-        "Account / Contract": account_number,
+        "Client Name": display_client,
+        "Account / Contract": display_account,
         "Initial Principal": f"{principal:,.2f}",
         "Daily Fixed Return": f"{daily_amount:,.2f}",
         "Period (Days)": days,
@@ -384,11 +394,11 @@ elif calculation_type in [txt["products"][1]]:
     
     col_dl1, col_dl2 = st.columns(2)
     with col_dl1:
-        excel_data = generate_excel_report(client_name, account_number, "Fixed Daily Amount", summary_dict, df)
-        st.download_button(txt["btn_excel"], data=excel_data, file_name=f'fixed_return_{account_number}.xlsx', mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        excel_data = generate_excel_report(display_client, display_account, "Fixed Daily Amount", summary_dict, df)
+        st.download_button(txt["btn_excel"], data=excel_data, file_name=f'fixed_return_{display_account}.xlsx', mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
     with col_dl2:
-        pdf_data = generate_pdf_report(client_name, account_number, "Fixed Daily Amount", summary_dict, fig_buf)
-        st.download_button(txt["btn_pdf"], data=pdf_data, file_name=f'financial_report_{account_number}.pdf', mime='application/pdf')
+        pdf_data = generate_pdf_report(display_client, display_account, "Fixed Daily Amount", summary_dict, fig_buf)
+        st.download_button(txt["btn_pdf"], data=pdf_data, file_name=f'financial_report_{display_account}.pdf', mime='application/pdf')
 
 # --- Logic 3: Time Of Deposit ---
 elif calculation_type in [txt["products"][2]]:
@@ -442,8 +452,8 @@ elif calculation_type in [txt["products"][2]]:
     plt.close(fig)
     
     summary_dict = {
-        "Client Name": client_name,
-        "Account / Contract": account_number,
+        "Client Name": display_client,
+        "Account / Contract": display_account,
         "Deposit Principal": f"{deposit_amount:,.2f}",
         "Annual Interest Rate": f"{deposit_rate}%",
         "Payout Frequency": payout_freq_en,
@@ -454,11 +464,11 @@ elif calculation_type in [txt["products"][2]]:
     
     col_dl1, col_dl2 = st.columns(2)
     with col_dl1:
-        excel_data = generate_excel_report(client_name, account_number, "Time Of Deposit", summary_dict, df_dep)
-        st.download_button(txt["btn_excel"], data=excel_data, file_name=f'deposit_report_{account_number}.xlsx', mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        excel_data = generate_excel_report(display_client, display_account, "Time Of Deposit", summary_dict, df_dep)
+        st.download_button(txt["btn_excel"], data=excel_data, file_name=f'deposit_report_{display_account}.xlsx', mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
     with col_dl2:
-        pdf_data = generate_pdf_report(client_name, account_number, "Time Of Deposit", summary_dict, fig_buf)
-        st.download_button(txt["btn_pdf"], data=pdf_data, file_name=f'financial_report_{account_number}.pdf', mime='application/pdf')
+        pdf_data = generate_pdf_report(display_client, display_account, "Time Of Deposit", summary_dict, fig_buf)
+        st.download_button(txt["btn_pdf"], data=pdf_data, file_name=f'financial_report_{display_account}.pdf', mime='application/pdf')
 
 # --- Logic 4: Certificate Of Deposit 3 Years ---
 else:
@@ -513,8 +523,8 @@ else:
     plt.close(fig)
     
     summary_dict = {
-        "Client Name": client_name,
-        "Account / Contract": account_number,
+        "Client Name": display_client,
+        "Account / Contract": display_account,
         "Certificate Principal": f"{cert_amount:,.2f}",
         "Annual Interest Rate": f"{cert_rate}%",
         "Payout Frequency": cert_freq_en,
@@ -525,8 +535,8 @@ else:
     
     col_dl1, col_dl2 = st.columns(2)
     with col_dl1:
-        excel_data = generate_excel_report(client_name, account_number, "Certificate Of Deposit 3 Years", summary_dict, df_cert)
-        st.download_button(txt["btn_excel"], data=excel_data, file_name=f'certificate_report_{account_number}.xlsx', mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        excel_data = generate_excel_report(display_client, display_account, "Certificate Of Deposit 3 Years", summary_dict, df_cert)
+        st.download_button(txt["btn_excel"], data=excel_data, file_name=f'certificate_report_{display_account}.xlsx', mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
     with col_dl2:
-        pdf_data = generate_pdf_report(client_name, account_number, "Certificate Of Deposit 3 Years", summary_dict, fig_buf)
-        st.download_button(txt["btn_pdf"], data=pdf_data, file_name=f'financial_report_{account_number}.pdf', mime='application/pdf')
+        pdf_data = generate_pdf_report(display_client, display_account, "Certificate Of Deposit 3 Years", summary_dict, fig_buf)
+        st.download_button(txt["btn_pdf"], data=pdf_data, file_name=f'financial_report_{display_account}.pdf', mime='application/pdf')
