@@ -540,3 +540,16 @@ else:
     with col_dl2:
         pdf_data = generate_pdf_report(display_client, display_account, "Certificate Of Deposit 3 Years", summary_dict, fig_buf)
         st.download_button(txt["btn_pdf"], data=pdf_data, file_name=f'financial_report_{display_account}.pdf', mime='application/pdf')
+
+import streamlit as st
+
+# Custom CSS to hide Streamlit header and footer
+hide_streamlit_style = """
+            <style>
+            #MainMenu {visibility: hidden;}
+            footer {visibility: hidden;}
+            header {visibility: hidden;}
+            .stAppFooter {display: none;}
+            </style>
+            """
+st.markdown(hide_streamlit_style, unsafe_allow_html=True)
