@@ -13,9 +13,26 @@ from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 # --- Page Configuration ---
 st.set_page_config(page_title="WMBAP - Smart Banking Return Simulator", page_icon="🏛️", layout="centered")
 
+# --- Dynamic Language Integration from URL Parameters ---
+query_params = st.query_params
+url_lang = query_params.get("lang", "en")
+
+if url_lang == "ar":
+    default_lang_idx = 1  # العربية
+else:
+    default_lang_idx = 0  # English
+
 # --- Language Selector (Sidebar) ---
 st.sidebar.title("🌐 Language / اللغة")
-lang = st.sidebar.radio("Select Language / اختر اللغة:", ["English", "العربية"], index=0)
+lang_options = ["English", "العربية"]
+selected_lang_name = st.sidebar.radio("Select Language / اختر اللغة:", lang_options, index=default_lang_idx)
+
+# Sync URL parameter if changed from sidebar
+current_lang_code = "ar" if selected_lang_name == "العربية" else "en"
+if url_lang != current_lang_code:
+    st.query_params["lang"] = current_lang_code
+
+lang = selected_lang_name
 
 # --- Translation Dictionary ---
 T = {
@@ -123,11 +140,9 @@ with st.container():
         account_number = st.text_input(txt["account_num"], value="", placeholder=txt["account_placeholder"])
     st.markdown('</div>', unsafe_allow_html=True)
 
-# Set defaults if client fields are left empty
 display_client = client_name.strip() if client_name.strip() else "N/A"
 display_account = account_number.strip() if account_number.strip() else "N/A"
 
-# Product Selection
 calculation_type = st.selectbox(txt["engine_select"], txt["products"])
 st.markdown("---")
 
@@ -540,16 +555,3 @@ else:
     with col_dl2:
         pdf_data = generate_pdf_report(display_client, display_account, "Certificate Of Deposit 3 Years", summary_dict, fig_buf)
         st.download_button(txt["btn_pdf"], data=pdf_data, file_name=f'financial_report_{display_account}.pdf', mime='application/pdf')
-
-import streamlit as st
-
-# Custom CSS to hide Streamlit header and footer
-hide_streamlit_style = """
-            <style>
-            #MainMenu {visibility: hidden;}
-            footer {visibility: hidden;}
-            header {visibility: hidden;}
-            .stAppFooter {display: none;}
-            </style>
-            """
-st.markdown(hide_streamlit_style, unsafe_allow_html=True)
